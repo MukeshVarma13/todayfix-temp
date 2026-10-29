@@ -1,10 +1,13 @@
+'use client'
+
+import Image from 'next/image'
+import { useRef, useState } from 'react'
 import {
-  ArrowDownToLine,
   ArrowRight,
-  ArrowUpRight,
-  BadgeCheck,
+  Bell,
   Bug,
-  CheckCircle2,
+  CalendarDays,
+  ChevronRight,
   Hammer,
   House,
   MapPin,
@@ -14,327 +17,485 @@ import {
   Sparkles,
   Truck,
   Wrench,
+  X,
   Zap,
 } from 'lucide-react'
-import { TodayfixPhonePreview } from '@/components/todayfix-phone-preview'
 
-const services = [
-  { icon: House, title: 'Home services', description: 'Everyday help, close to home', tone: 'tfx-service-icon-purple' },
-  { icon: Truck, title: 'Moving & shifting', description: 'Make moving feel lighter', tone: 'tfx-service-icon-green' },
-  { icon: Bug, title: 'Pest control', description: 'Take back your space', tone: 'tfx-service-icon-green' },
-  { icon: Hammer, title: 'Construction', description: 'Bring your plans to life', tone: 'tfx-service-icon-purple' },
-  { icon: Wrench, title: 'Appliance repair', description: 'Get things working again', tone: 'tfx-service-icon-green' },
-  { icon: Package, title: 'Material supply', description: 'Find what your project needs', tone: 'tfx-service-icon-purple' },
-  { icon: MapPin, title: 'Today Travels', description: 'Plan your next journey', tone: 'tfx-service-icon-green' },
-  { icon: Sparkles, title: 'Explore all services', description: 'There is more to discover', tone: 'tfx-service-icon-purple' },
+type AppTab = 'home' | 'explore' | 'bookings'
+
+type Category = {
+  label: string
+  value: string | null
+  icon: typeof House
+  tone: 'violet' | 'green' | 'amber' | 'blue'
+}
+
+type Service = {
+  title: string
+  category: string
+  description: string
+  icon: typeof House
+}
+
+const categories: Category[] = [
+  { label: 'Home services', value: 'Home services', icon: House, tone: 'violet' },
+  { label: 'Moving & shifting', value: 'Moving & shifting', icon: Truck, tone: 'green' },
+  { label: 'Pest control', value: 'Pest control', icon: Bug, tone: 'amber' },
+  { label: 'Appliance repair', value: 'Appliance repair', icon: Wrench, tone: 'blue' },
+  { label: 'Construction', value: 'Construction', icon: Hammer, tone: 'amber' },
+  { label: 'Material supply', value: 'Material supply', icon: Package, tone: 'green' },
+  { label: 'Today Travels', value: 'Today Travels', icon: MapPin, tone: 'violet' },
+  { label: 'All services', value: null, icon: Sparkles, tone: 'blue' },
 ]
 
-const stats = [
-  { value: '100+', label: 'verified professionals' },
-  { value: '50+', label: 'service areas' },
-  { value: '100+', label: 'service categories' },
-]
-
-const steps = [
+const services: Service[] = [
   {
-    number: '01',
-    icon: Search,
-    title: 'Find what you need',
-    description: 'Search by service and area to discover the right kind of help.',
+    title: 'Plumbing & electrical',
+    category: 'Home services',
+    description: 'Trusted help for everyday home fixes',
+    icon: Wrench,
   },
   {
-    number: '02',
-    icon: BadgeCheck,
-    title: 'Explore local pros',
-    description: 'Compare nearby providers and choose the one that fits your needs.',
+    title: 'Moving & shifting',
+    category: 'Moving & shifting',
+    description: 'Local help for a smoother move',
+    icon: Truck,
   },
   {
-    number: '03',
-    icon: CheckCircle2,
-    title: 'Get on with your day',
-    description: 'Connect with a professional and leave the task in capable hands.',
-  },
-]
-
-const benefits = [
-  {
-    icon: ShieldCheck,
-    title: 'A more confident choice',
-    description: 'Discover vetted professionals and local businesses in one place.',
+    title: 'Pest control',
+    category: 'Pest control',
+    description: 'Help keep your space comfortable',
+    icon: Bug,
   },
   {
+    title: 'Appliance repair',
+    category: 'Appliance repair',
+    description: 'Get essential appliances working again',
+    icon: Wrench,
+  },
+  {
+    title: 'Construction services',
+    category: 'Construction',
+    description: 'Support for your next project',
+    icon: Hammer,
+  },
+  {
+    title: 'Material supply',
+    category: 'Material supply',
+    description: 'Find materials for your project',
+    icon: Package,
+  },
+  {
+    title: 'Today Travels',
+    category: 'Today Travels',
+    description: 'Explore travel services in one place',
     icon: MapPin,
-    title: 'Help that feels close',
-    description: 'Browse services available in your neighborhood and service area.',
-  },
-  {
-    icon: Zap,
-    title: 'Simple from the start',
-    description: 'Find a service, explore your options, and take the next step with ease.',
   },
 ]
 
-function Brand() {
+function StatusBar() {
   return (
-    <a className="tfx-brand" href="#top" aria-label="Todayfix home">
-      <span className="tfx-brand-mark"><Zap fill="currentColor" /></span>
-      <span>Todayfix</span>
-    </a>
+    <div className="tfa-status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <span className="tfa-status-indicators">
+        <span className="tfa-signal"><i /><i /><i /><i /></span>
+        <span className="tfa-wifi" />
+        <span className="tfa-battery"><i /></span>
+      </span>
+    </div>
   )
 }
 
-function Header() {
+function AppHeader({
+  notificationsOpen,
+  onToggleNotifications,
+  onGoHome,
+}: {
+  notificationsOpen: boolean
+  onToggleNotifications: () => void
+  onGoHome: () => void
+}) {
   return (
-    <header className="tfx-header">
-      <div className="tfx-container tfx-header-inner">
-        <Brand />
-        <nav className="tfx-main-nav" aria-label="Main navigation">
-          <a href="#services">Services</a>
-          <a href="#why-todayfix">Why Todayfix</a>
-          <a href="#how-it-works">How it works</a>
-        </nav>
-        <a className="tfx-button tfx-button-primary tfx-header-cta" href="#download">
-          <span>Download APK</span>
-          <ArrowDownToLine aria-hidden="true" />
-        </a>
-      </div>
+    <header className="tfa-app-header">
+      <button className="tfa-brand-button" type="button" onClick={onGoHome} aria-label="Todayfix home">
+        <span className="tfa-brand-mark"><Zap fill="currentColor" aria-hidden="true" /></span>
+        <span className="tfa-brand-name">Todayfix</span>
+      </button>
+      <button
+        className="tfa-notification-button"
+        type="button"
+        onClick={onToggleNotifications}
+        aria-label={notificationsOpen ? 'Close notifications' : 'Notifications'}
+        aria-expanded={notificationsOpen}
+      >
+        {notificationsOpen ? <X aria-hidden="true" /> : <Bell aria-hidden="true" />}
+        {!notificationsOpen && <span className="tfa-notification-dot" />}
+      </button>
     </header>
   )
 }
 
-function Hero() {
+function LocationRow() {
   return (
-    <section className="tfx-hero" id="top">
-      <div className="tfx-hero-grid" aria-hidden="true" />
-      <div className="tfx-container tfx-hero-inner">
-        <div className="tfx-hero-copy">
-          <p className="tfx-eyebrow"><span className="tfx-eyebrow-dot" />LOCAL SERVICES, MADE SIMPLE</p>
-          <h1>Your home,<br /><span>in good hands.</span></h1>
-          <p className="tfx-hero-description">
-            From quick repairs to big moves, find trusted local professionals and book help in a few taps.
-          </p>
-          <div className="tfx-hero-actions">
-            <a className="tfx-button tfx-button-primary tfx-button-large" href="#download">
-              <ArrowDownToLine aria-hidden="true" />
-              Download APK
-            </a>
-            <a className="tfx-text-link" href="#services">
-              Explore services <ArrowRight aria-hidden="true" />
-            </a>
-          </div>
-          <div className="tfx-hero-proof" aria-label="Todayfix benefits">
-            <span><ShieldCheck aria-hidden="true" />Trusted local pros</span>
-            <span><CheckCircle2 aria-hidden="true" />Simple booking</span>
-          </div>
-        </div>
-        <TodayfixPhonePreview />
-      </div>
-    </section>
+    <div className="tfa-location-row">
+      <span className="tfa-location-icon"><MapPin aria-hidden="true" /></span>
+      <span className="tfa-location-copy">
+        <span>Service area</span>
+        <strong>Bengaluru, India</strong>
+      </span>
+    </div>
   )
 }
 
-function StatsStrip() {
+function SearchField({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
-    <section className="tfx-stats-section" aria-label="Todayfix network">
-      <div className="tfx-container tfx-stats-grid">
-        {stats.map((stat) => (
-          <div className="tfx-stat" key={stat.label}>
-            <strong>{stat.value}</strong>
-            <span>{stat.label}</span>
-          </div>
-        ))}
-      </div>
-    </section>
+    <form className="tfa-search" role="search" onSubmit={(event) => event.preventDefault()}>
+      <Search aria-hidden="true" />
+      <label className="sr-only" htmlFor="todayfix-search">Search services</label>
+      <input
+        id="todayfix-search"
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search services or professionals"
+        autoComplete="off"
+      />
+      {value && (
+        <button type="button" className="tfa-clear-search" onClick={() => onChange('')} aria-label="Clear search">
+          <X aria-hidden="true" />
+        </button>
+      )}
+    </form>
   )
 }
 
-function ServicesSection() {
+function CategoryGrid({
+  items,
+  selected,
+  onSelect,
+}: {
+  items: Category[]
+  selected: string | null
+  onSelect: (category: string | null) => void
+}) {
   return (
-    <section className="tfx-section tfx-services-section" id="services">
-      <div className="tfx-container">
-        <div className="tfx-section-heading">
-          <p className="tfx-eyebrow">A LITTLE HELP GOES A LONG WAY</p>
-          <h2>Whatever the day needs.</h2>
-          <p>Find support for the jobs that keep life moving.</p>
-        </div>
-        <div className="tfx-services-grid">
-          {services.map(({ icon: Icon, title, description, tone }, index) => {
-            const href = index === services.length - 1
-              ? 'https://todayfix.in/services'
-              : `https://todayfix.in/services?term=${encodeURIComponent(title)}`
-
-            return (
-              <a
-                className="tfx-service-card"
-                href={href}
-                key={title}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Explore ${title} on Todayfix`}
-              >
-                <span className={`tfx-service-icon ${tone}`}><Icon aria-hidden="true" /></span>
-                <span className="tfx-service-card-copy">
-                  <strong>{title}</strong>
-                  <small>{description}</small>
-                </span>
-                <ArrowUpRight className="tfx-service-arrow" aria-hidden="true" />
-              </a>
-            )
-          })}
-        </div>
-      </div>
-    </section>
+    <div className="tfa-category-grid">
+      {items.map(({ label, value, icon: Icon, tone }) => (
+        <button
+          className="tfa-category"
+          data-active={selected === value}
+          key={label}
+          type="button"
+          onClick={() => onSelect(value)}
+          aria-pressed={selected === value}
+        >
+          <span className={`tfa-category-icon tfa-category-icon-${tone}`}>
+            <Icon aria-hidden="true" />
+          </span>
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>
   )
 }
 
-function WhyTodayfixSection() {
-  return (
-    <section className="tfx-section tfx-why-section" id="why-todayfix">
-      <div className="tfx-container">
-        <div className="tfx-section-heading tfx-section-heading-centered">
-          <p className="tfx-eyebrow">BUILT AROUND YOUR DAY</p>
-          <h2>Less searching. More sorted.</h2>
-          <p>A simpler way to connect with the people who can help.</p>
-        </div>
-        <div className="tfx-benefits-grid">
-          {benefits.map(({ icon: Icon, title, description }) => (
-            <article className="tfx-benefit-card" key={title}>
-              <span className="tfx-benefit-icon"><Icon aria-hidden="true" /></span>
-              <h3>{title}</h3>
-              <p>{description}</p>
-            </article>
-          ))}
-        </div>
+function ServiceRail({
+  items,
+  onSelect,
+}: {
+  items: Service[]
+  onSelect: (category: string) => void
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="tfa-no-results" role="status">
+        <Search aria-hidden="true" />
+        <p>No services match that search. Try a different word.</p>
       </div>
-    </section>
+    )
+  }
+
+  return (
+    <div className="tfa-service-rail">
+      {items.map(({ title, category, description, icon: Icon }) => (
+        <button className="tfa-service-card" key={title} type="button" onClick={() => onSelect(category)}>
+          <span className="tfa-service-card-icon"><Icon aria-hidden="true" /></span>
+          <span className="tfa-service-card-copy">
+            <strong>{title}</strong>
+            <small>{description}</small>
+          </span>
+          <ChevronRight className="tfa-service-chevron" aria-hidden="true" />
+        </button>
+      ))}
+    </div>
   )
 }
 
-function HowItWorksSection() {
+function SectionHeading({
+  id,
+  title,
+  action,
+  onAction,
+}: {
+  id?: string
+  title: string
+  action?: string
+  onAction?: () => void
+}) {
   return (
-    <section className="tfx-section tfx-how-section" id="how-it-works">
-      <div className="tfx-container">
-        <div className="tfx-how-layout">
-          <div className="tfx-how-intro">
-            <p className="tfx-eyebrow">THREE SIMPLE STEPS</p>
-            <h2>Good help, without the runaround.</h2>
-            <p>Todayfix brings local services together, so getting started feels easy.</p>
-            <a className="tfx-text-link" href="#download">Get the app <ArrowRight aria-hidden="true" /></a>
-          </div>
-          <div className="tfx-steps-list">
-            {steps.map(({ number, icon: Icon, title, description }) => (
-              <article className="tfx-step" key={number}>
-                <span className="tfx-step-number">{number}</span>
-                <span className="tfx-step-icon"><Icon aria-hidden="true" /></span>
-                <div>
-                  <h3>{title}</h3>
-                  <p>{description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
+    <div className="tfa-section-heading">
+      <h2 id={id}>{title}</h2>
+      {action && onAction && (
+        <button className="tfa-section-action" type="button" onClick={onAction}>
+          {action}<ArrowRight aria-hidden="true" />
+        </button>
+      )}
+    </div>
   )
 }
 
-function DownloadSection() {
+function FeaturedCard({ onExplore }: { onExplore: () => void }) {
   return (
-    <section className="tfx-download-section" id="download">
-      <div className="tfx-container">
-        <div className="tfx-download-panel">
-          <div className="tfx-download-copy">
-            <p className="tfx-eyebrow tfx-eyebrow-light"><span className="tfx-eyebrow-dot" />MADE FOR ANDROID</p>
-            <h2>Good help is closer than ever.</h2>
-            <p>Take the Todayfix experience with you and find local services whenever you need them.</p>
-            <div className="tfx-download-actions">
-              <button className="tfx-button tfx-button-disabled tfx-button-large" type="button" disabled>
-                <ArrowDownToLine aria-hidden="true" />
-                APK link coming soon
-              </button>
-              <a className="tfx-download-web-link" href="https://todayfix.in" target="_blank" rel="noreferrer">
-                Explore Todayfix online <ArrowUpRight aria-hidden="true" />
-              </a>
-            </div>
-            <p className="tfx-download-note">The direct download button will be ready when the APK link is added.</p>
-          </div>
-          <div className="tfx-download-art" aria-hidden="true">
-            <div className="tfx-download-glow" />
-            <div className="tfx-download-card">
-              <span className="tfx-download-card-icon"><Zap fill="currentColor" /></span>
-              <span className="tfx-download-card-label">TODAYFIX FOR ANDROID</span>
-              <strong>One app.<br />More done.</strong>
-              <span className="tfx-download-card-footer"><ShieldCheck /> Local help, all in one place</span>
-            </div>
-            <span className="tfx-download-spark tfx-download-spark-one"><Sparkles /></span>
-            <span className="tfx-download-spark tfx-download-spark-two"><CheckCircle2 /></span>
-          </div>
-        </div>
+    <article className="tfa-featured-card">
+      <Image
+        src="/todayfix-home-service.png"
+        alt="A home-service professional checking an air conditioner in a bright apartment"
+        fill
+        priority
+        sizes="(max-width: 520px) 100vw, 400px"
+        className="tfa-featured-image"
+      />
+      <div className="tfa-featured-overlay" />
+      <div className="tfa-featured-copy">
+        <span><ShieldCheck aria-hidden="true" /> Local services, all in one place</span>
+        <h2>Good help is right around the corner.</h2>
+        <button type="button" onClick={onExplore}>
+          Explore services<ArrowRight aria-hidden="true" />
+        </button>
       </div>
-    </section>
+    </article>
   )
 }
 
-function FaqSection() {
+function HomeScreen({
+  searchTerm,
+  onSearch,
+  visibleCategories,
+  selectedCategory,
+  onSelectCategory,
+  visibleServices,
+  onExplore,
+  onClearFilters,
+}: {
+  searchTerm: string
+  onSearch: (value: string) => void
+  visibleCategories: Category[]
+  selectedCategory: string | null
+  onSelectCategory: (category: string | null) => void
+  visibleServices: Service[]
+  onExplore: () => void
+  onClearFilters: () => void
+}) {
   return (
-    <section className="tfx-section tfx-faq-section" id="faq">
-      <div className="tfx-container tfx-faq-layout">
-        <div className="tfx-faq-intro">
-          <p className="tfx-eyebrow">A FEW QUICK ANSWERS</p>
-          <h2>Good to know.</h2>
-          <p>Everything you need to get started with Todayfix.</p>
-        </div>
-        <div className="tfx-faq-list">
-          <details>
-            <summary>What is Todayfix?</summary>
-            <p>Todayfix helps you discover local service providers and businesses for everyday needs, all in one place.</p>
-          </details>
-          <details>
-            <summary>What services can I find?</summary>
-            <p>Explore home services, moving, pest control, appliance repair, construction, material supply, travel, and more.</p>
-          </details>
-          <details>
-            <summary>Where can I download the Android APK?</summary>
-            <p>The direct APK link will be available here once it is added. In the meantime, you can explore Todayfix online.</p>
-          </details>
-        </div>
+    <div className="tfa-screen-content">
+      <LocationRow />
+      <div className="tfa-home-intro">
+        <p className="tfa-eyebrow">LOCAL HELP, MADE SIMPLE</p>
+        <h1>What do you need today?</h1>
+        <p>Find trusted services for your home and everyday life.</p>
       </div>
-    </section>
+      <SearchField value={searchTerm} onChange={onSearch} />
+
+      <section className="tfa-section" aria-labelledby="tfa-categories-title">
+        <SectionHeading id="tfa-categories-title" title="Explore categories" action="View all" onAction={onExplore} />
+        <CategoryGrid items={visibleCategories} selected={selectedCategory} onSelect={onSelectCategory} />
+      </section>
+
+      <FeaturedCard onExplore={onExplore} />
+
+      <section className="tfa-section tfa-popular-section" aria-labelledby="tfa-popular-title">
+        <SectionHeading id="tfa-popular-title" title="Popular services" action={searchTerm || selectedCategory ? 'Clear' : undefined} onAction={onClearFilters} />
+        <ServiceRail items={visibleServices.slice(0, 4)} onSelect={onSelectCategory} />
+      </section>
+    </div>
   )
 }
 
-function Footer() {
+function ExploreScreen({
+  searchTerm,
+  onSearch,
+  visibleCategories,
+  selectedCategory,
+  onSelectCategory,
+  visibleServices,
+  onClearFilters,
+}: {
+  searchTerm: string
+  onSearch: (value: string) => void
+  visibleCategories: Category[]
+  selectedCategory: string | null
+  onSelectCategory: (category: string | null) => void
+  visibleServices: Service[]
+  onClearFilters: () => void
+}) {
   return (
-    <footer className="tfx-footer">
-      <div className="tfx-container tfx-footer-inner">
-        <Brand />
-        <p>Local help, made simple.</p>
-        <div className="tfx-footer-links">
-          <a href="#services">Services</a>
-          <a href="#how-it-works">How it works</a>
-          <a href="https://todayfix.in" target="_blank" rel="noreferrer">Todayfix.in <ArrowUpRight aria-hidden="true" /></a>
-        </div>
+    <div className="tfa-screen-content tfa-explore-screen">
+      <LocationRow />
+      <div className="tfa-home-intro">
+        <p className="tfa-eyebrow">FIND WHAT YOU NEED</p>
+        <h1>Explore services</h1>
+        <p>Browse local help by category or search below.</p>
       </div>
-    </footer>
+      <SearchField value={searchTerm} onChange={onSearch} />
+      <section className="tfa-section" aria-labelledby="tfa-all-categories-title">
+        <SectionHeading id="tfa-all-categories-title" title="All categories" />
+        <CategoryGrid items={visibleCategories} selected={selectedCategory} onSelect={onSelectCategory} />
+      </section>
+      <section className="tfa-section tfa-explore-results" aria-labelledby="tfa-results-title">
+        <SectionHeading id="tfa-results-title" title="Services for you" action={searchTerm || selectedCategory ? 'Clear' : undefined} onAction={onClearFilters} />
+        <div className="tfa-explore-service-list">
+          <ServiceRail items={visibleServices} onSelect={onSelectCategory} />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function BookingsScreen({ onExplore }: { onExplore: () => void }) {
+  return (
+    <div className="tfa-screen-content tfa-bookings-screen">
+      <LocationRow />
+      <div className="tfa-home-intro">
+        <p className="tfa-eyebrow">YOUR ACTIVITY</p>
+        <h1>Your bookings</h1>
+        <p>Keep track of the services you book with Todayfix.</p>
+      </div>
+      <div className="tfa-bookings-empty">
+        <span className="tfa-empty-icon"><CalendarDays aria-hidden="true" /></span>
+        <h2>No bookings yet</h2>
+        <p>When you book a service, your details will appear here.</p>
+        <button className="tfa-primary-action" type="button" onClick={onExplore}>
+          Find a service<ArrowRight aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function BottomNavigation({
+  activeTab,
+  onChange,
+}: {
+  activeTab: AppTab
+  onChange: (tab: AppTab) => void
+}) {
+  const tabs = [
+    { id: 'home' as const, label: 'Home', icon: House },
+    { id: 'explore' as const, label: 'Explore', icon: Search },
+    { id: 'bookings' as const, label: 'Bookings', icon: CalendarDays },
+  ]
+
+  return (
+    <nav className="tfa-bottom-nav" aria-label="App navigation">
+      {tabs.map(({ id, label, icon: Icon }) => (
+        <button
+          className="tfa-nav-item"
+          data-active={activeTab === id}
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          aria-current={activeTab === id ? 'page' : undefined}
+        >
+          <Icon aria-hidden="true" />
+          <span>{label}</span>
+        </button>
+      ))}
+    </nav>
   )
 }
 
 export function TodayfixHome() {
+  const [activeTab, setActiveTab] = useState<AppTab>('home')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const scrollAreaRef = useRef<HTMLElement | null>(null)
+  const normalizedSearch = searchTerm.trim().toLowerCase()
+
+  const visibleCategories = categories
+  const visibleServices = services.filter((service) => {
+    const matchesCategory = !selectedCategory || service.category === selectedCategory
+    const matchesSearch =
+      !normalizedSearch ||
+      `${service.title} ${service.category} ${service.description}`.toLowerCase().includes(normalizedSearch)
+
+    return matchesCategory && matchesSearch
+  })
+
+  function handleSearch(value: string) {
+    setSearchTerm(value)
+    setSelectedCategory(null)
+  }
+
+  function handleCategorySelect(category: string | null) {
+    setSelectedCategory(category)
+    setSearchTerm('')
+  }
+
+  function handleTabChange(tab: AppTab) {
+    setActiveTab(tab)
+    setNotificationsOpen(false)
+    scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function clearFilters() {
+    setSearchTerm('')
+    setSelectedCategory(null)
+  }
+
+  const screenProps = {
+    searchTerm,
+    onSearch: handleSearch,
+    visibleCategories,
+    selectedCategory,
+    onSelectCategory: handleCategorySelect,
+    visibleServices,
+    onClearFilters: clearFilters,
+  }
+
   return (
-    <div className="tfx-site">
-      <a className="tfx-skip-link" href="#main-content">Skip to content</a>
-      <Header />
-      <main id="main-content">
-        <Hero />
-        <StatsStrip />
-        <ServicesSection />
-        <WhyTodayfixSection />
-        <HowItWorksSection />
-        <DownloadSection />
-        <FaqSection />
-      </main>
-      <Footer />
+    <div className="tfa-preview-stage">
+      <div className="tfa-device">
+        <div className="tfa-device-notch" aria-hidden="true" />
+        <StatusBar />
+        <AppHeader
+          notificationsOpen={notificationsOpen}
+          onToggleNotifications={() => setNotificationsOpen((open) => !open)}
+          onGoHome={() => handleTabChange('home')}
+        />
+        {notificationsOpen && (
+          <div className="tfa-notification-popover" role="status">
+            <strong>You&apos;re all caught up</strong>
+            <span>New updates will show up here.</span>
+          </div>
+        )}
+        <main className="tfa-scroll-content" ref={scrollAreaRef}>
+          {activeTab === 'home' && (
+            <HomeScreen {...screenProps} onExplore={() => handleTabChange('explore')} />
+          )}
+          {activeTab === 'explore' && <ExploreScreen {...screenProps} />}
+          {activeTab === 'bookings' && (
+            <BookingsScreen onExplore={() => handleTabChange('explore')} />
+          )}
+        </main>
+        <BottomNavigation activeTab={activeTab} onChange={handleTabChange} />
+      </div>
     </div>
   )
 }

@@ -4,13 +4,13 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://todayfix.in'),
-  title: 'Todayfix | Your home, in good hands',
+  title: 'Todayfix | Local services in one app',
   description:
-    'Find trusted local professionals for home services, moving, repairs and more with Todayfix.',
+    'Explore local home services, moving, repairs, pest control and more with the Todayfix mobile app.',
   openGraph: {
-    title: 'Todayfix | Your home, in good hands',
+    title: 'Todayfix | Local services in one app',
     description:
-      'Find trusted local professionals for home services, moving, repairs and more with Todayfix.',
+      'Explore local home services, moving, repairs, pest control and more with the Todayfix mobile app.',
     url: 'https://todayfix.in',
     siteName: 'Todayfix',
     locale: 'en_IN',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#fbfaff',
+  themeColor: '#f7f4fa',
 }
 
 export default function RootLayout({
